@@ -1,0 +1,27 @@
+
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET         /accreds                    controllers.AccredsController.getAccreds
++nocsrf
+POST        /accreds                    controllers.AccredsController.createAccred
++nocsrf
+POST        /accreds/multiple           controllers.AccredsController.createAccreds
++nocsrf
+PUT         /accreds/:id                controllers.AccredsController.updateAccred(id: Int)
+GET         /accreds/:id                controllers.AccredsController.getAccred(id: Int)
+
+GET         /accredTypes                controllers.AccredTypesController.getAccredTypes
++nocsrf
+POST        /accredTypes                controllers.AccredTypesController.createAccredType
+GET         /physicalAccredTypes        controllers.AccredTypesController.getPhysicalAccredTypes
++nocsrf
+POST        /physicalAccredTypes        controllers.AccredTypesController.createPhysicalAccredType
+GET         /fullAccredTypes            controllers.AccredTypesController.getFullAccredTypes
+
+GET         /vipDesks                   controllers.VipDesksController.getDesks
++nocsrf
+POST        /vipDesks                   controllers.VipDesksController.createDesk
+
+GET         /login/:ticket              controllers.LoginController.login(ticket: String)
