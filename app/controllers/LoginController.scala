@@ -3,8 +3,9 @@ package controllers
 import java.time.Clock
 
 import ch.japanimpact.auth.api.AuthApi
-import data.{AdminUser, UserSession}
+import data.{AdminUser, StaffUser, UserSession}
 import javax.inject.Inject
+import models.StaffAccountsModel
 import pdi.jwt.JwtSession
 import play.api.Configuration
 import play.api.libs.json.{Format, Json}
@@ -16,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi, accounts: StaffAccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def login(ticket: String): Action[AnyContent] = Action.async { implicit rq =>
     if (auth.isValidTicket(ticket)) {
@@ -33,25 +34,19 @@ class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi)(implici
     } else Future(BadRequest)
   }
 
-  /*case class GrantStaffRequest()
+  case class GrantStaffRequest(vipDeskId: Int, name: String)
 
   implicit val requestParser: Format[GrantStaffRequest] = Json.format[GrantStaffRequest]
 
   def grantStaff: Action[GrantStaffRequest] = Action.async(parse.json[GrantStaffRequest]) { implicit rq =>
-    /*
-    if (auth.isValidTicket(ticket)) {
-      auth.getAppTicket(ticket).map {
-        case Left(ticketResponse) if ticketResponse.ticketType.isValidLogin =>
-          if (!ticketResponse.groups("comite")) Forbidden
-          else {
-            val session: JwtSession = JwtSession() + ("user", UserSession(ticketResponse))
+    accounts.createStaffAccount(rq.body.vipDeskId, rq.body.name, rq.user.asInstanceOf[AdminUser].userId)
+      .map {
+        case Some(accountId) =>
+          val session: JwtSession = JwtSession() + ("user", StaffUser(accountId).asInstanceOf[UserSession])
 
-            Ok(Json.toJson(Json.obj("session" -> session.serialize)))
-          }
-        case Right(_) => BadRequest
+          Ok(Json.toJson(Json.obj("session" -> session.serialize)))
+        case None => InternalServerError
       }
-    } else Future(BadRequest)*/
-    Future(Ok)
-  }.requiresAdmin*/
+  }.requiresAdmin
 
 }

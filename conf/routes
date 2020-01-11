@@ -13,6 +13,8 @@ PUT           /accreds/:id                controllers.AccredsController.updateAc
 +nocsrf
 DELETE        /accreds/:id                controllers.AccredsController.deleteAccred(id: Int)
 GET           /accreds/:id                controllers.AccredsController.getAccred(id: Int)
++nocsrf
+PUT           /accreds/:id/state          controllers.AccredsController.setState(id: Int)
 
 GET           /accredTypes                controllers.AccredTypesController.getAccredTypes
 +nocsrf
@@ -27,3 +29,7 @@ GET           /vipDesks                   controllers.VipDesksController.getDesk
 POST          /vipDesks                   controllers.VipDesksController.createDesk
 
 GET           /login/:ticket              controllers.LoginController.login(ticket: String)
++nocsrf
+POST           /staffMode                  controllers.LoginController.grantStaff
+
+GET           /people/admins              controllers.PeopleController.getAdmins
