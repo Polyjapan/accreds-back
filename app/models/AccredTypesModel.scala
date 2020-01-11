@@ -12,6 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(implicit ec: ExecutionContext) {
   private val db = dbApi database "default"
+  private def eventId = events.getCurrentEventIdSync
 
   def getAccredTypes(): Future[List[AccredType]] = Future(db.withConnection { implicit conn =>
     SQL("SELECT * FROM accred_types").as(AccredTypeRowParser.*)
@@ -30,7 +31,6 @@ class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(
   })
 
   def getFullAccredTypes(): Future[List[FullAccredType]] = Future(db.withConnection { implicit conn =>
-    val eventId = events.getCurrentEventIdSync()
 
     SQL("SELECT accred_types.*, physical_accred_types.* FROM accred_types LEFT JOIN accred_type_mappings atm on accred_types.accred_type_id = atm.accred_type_id AND atm.event_id = {eventId} LEFT JOIN physical_accred_types on atm.physical_accred_type_id = physical_accred_types.physical_accred_type_id")
       .on("eventId" -> eventId)

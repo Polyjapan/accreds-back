@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAccreds: Action[AnyContent] = Action.async { implicit rq =>
-    model.getAccreds().map(res => Ok(Json.toJson(res)))
+    model.getAccreds.map(res => Ok(Json.toJson(res)))
   }.requiresAuthentication
 
   def getAccred(id: Int): Action[AnyContent] = Action.async { implicit rq =>
@@ -44,6 +44,10 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
 
   def updateAccred(id: Int): Action[Accred] = Action.async(parse.json[Accred]) { implicit rq =>
     model.updateAccred(id, rq.body).map(res => Ok(Json.toJson(res > 0)))
+  }.requiresAdmin
+
+  def deleteAccred(id: Int) = Action.async { implicit rq =>
+    model.deleteAccred(id).map(res => Ok(Json.toJson(res > 0)))
   }.requiresAdmin
 
 }
