@@ -7,6 +7,8 @@ GET           /accreds                    controllers.AccredsController.getAccre
 +nocsrf
 POST          /accreds                    controllers.AccredsController.createAccred
 +nocsrf
+POST          /accreds/delegated          controllers.AccredsController.createAccredDelegated
++nocsrf
 POST          /accreds/multiple           controllers.AccredsController.createAccreds
 +nocsrf
 PUT           /accreds/:id                controllers.AccredsController.updateAccred(id: Int)
@@ -29,7 +31,8 @@ GET           /vipDesks                   controllers.VipDesksController.getDesk
 POST          /vipDesks                   controllers.VipDesksController.createDesk
 
 GET           /login/:ticket              controllers.LoginController.login(ticket: String)
+GET           /delegationKey              controllers.LoginController.createDelegationKey
 +nocsrf
-POST           /staffMode                  controllers.LoginController.grantStaff
+POST          /staffMode                  controllers.LoginController.grantStaff
 
 GET           /people/admins              controllers.PeopleController.getAdmins

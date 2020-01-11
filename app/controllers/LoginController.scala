@@ -5,7 +5,7 @@ import java.time.Clock
 import ch.japanimpact.auth.api.AuthApi
 import data.{AdminUser, StaffUser, UserSession}
 import javax.inject.Inject
-import models.StaffAccountsModel
+import models.AccountsModel
 import pdi.jwt.JwtSession
 import play.api.Configuration
 import play.api.libs.json.{Format, Json}
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi, accounts: StaffAccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def login(ticket: String): Action[AnyContent] = Action.async { implicit rq =>
     if (auth.isValidTicket(ticket)) {
@@ -45,6 +45,14 @@ class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi, account
           val session: JwtSession = JwtSession() + ("user", StaffUser(accountId).asInstanceOf[UserSession])
 
           Ok(Json.toJson(Json.obj("session" -> session.serialize)))
+        case None => InternalServerError
+      }
+  }.requiresAdmin
+
+  def createDelegationKey = Action.async { implicit rq =>
+    accounts.createOneTimeKey(rq.user.asInstanceOf[AdminUser].userId)
+      .map {
+        case Some(key) => Ok(key)
         case None => InternalServerError
       }
   }.requiresAdmin

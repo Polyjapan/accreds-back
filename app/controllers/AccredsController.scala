@@ -5,7 +5,7 @@ import java.time.Clock
 import ch.japanimpact.auth.api.AuthApi
 import data.{Accred, AccredStatus, AdminUser, StaffUser}
 import javax.inject.Inject
-import models.AccredsModel
+import models.{AccountsModel, AccredsModel}
 import play.api.Configuration
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredsModel, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAccreds: Action[AnyContent] = Action.async { implicit rq =>
     model.getAccreds.map(res => Ok(Json.toJson(res)))
@@ -53,6 +53,26 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
 
     model.createAccred(toCreate).map(res => Ok(Json.toJson(res)))
   }.requiresAdmin
+
+  case class DelegatedAccredCreation(accred: Accred, delegationKey: String)
+
+  implicit val DelegatedAccredCreationFormat: Format[DelegatedAccredCreation] = Json.format[DelegatedAccredCreation]
+
+  def createAccredDelegated: Action[DelegatedAccredCreation] = Action.async(parse.json[DelegatedAccredCreation]) { implicit rq =>
+    val key = rq.body.delegationKey.trim.toUpperCase.replaceAll("[^A-F0-9]", "")
+
+    if (key.length < 5 || key.length > 20) {
+      Future(Forbidden)
+    } else {
+      accounts.getOneTimeKey(key).flatMap {
+        case Some(userId) =>
+          val toCreate = rq.body.accred.copy(None, authoredBy = userId, status = AccredStatus.Granted, details = Some(rq.body.accred.details.getOrElse("") + " - Créé par délégation au compte staff " + rq.user.asInstanceOf[StaffUser].staffUserId))
+          model.createAccred(toCreate).map(res => Ok(Json.toJson(res)))
+
+        case None => Future(Forbidden)
+      }
+    }
+  }.requiresAuthentication
 
   def createAccreds: Action[List[Accred]] = Action.async(parse.json[List[Accred]]) { implicit rq =>
     val userId = rq.user.asInstanceOf[AdminUser].userId

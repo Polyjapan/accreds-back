@@ -14,10 +14,11 @@ lazy val root = (project in file("."))
     libraryDependencies += "ch.japanimpact" %% "jiauthframework" % "0.2-SNAPSHOT",
     libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.34",
     libraryDependencies += "com.pauldijou" %% "jwt-play" % "4.2.0",
+    libraryDependencies += "com.warrenstrange" % "googleauth" % "1.4.0",
 
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
-
     resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/",
+    resolvers += Resolver.mavenCentral,
     scalacOptions ++= Seq(
       "-feature",
       "-deprecation"
