@@ -12,7 +12,7 @@ package object data {
 
   case class VipDesk(vipDeskId: Option[Int], vipDeskName: String)
 
-  case class PhysicalAccredType(physicalAccredTypeId: Option[Int], physicalAccredTypeName: String)
+  case class PhysicalAccredType(physicalAccredTypeId: Option[Int], physicalAccredTypeName: String, physicalAccredTypeNumbered: Boolean)
 
   case class AccredType(accredTypeId: Option[Int], accredTypeName: String, requiresSignature: Boolean, isTemporary: Boolean)
 
@@ -39,11 +39,11 @@ package object data {
 
   case class AccredTypeMapping(eventId: Int, accredTypeId: Int, physicalAccredTypeId: Int)
 
-  case class Accred(accredId: Option[Int], eventId: Int, firstname: String, lastname: String, bodyName: String, stageName: String, details: Option[String], authoredBy: Int, accredTypeId: Int, status: AccredStatus.Value, preferedVipDesk: Int, mustContactAdmin: Boolean)
+  case class Accred(accredId: Option[Int], eventId: Int, firstname: String, lastname: String, bodyName: String, stageName: String, details: Option[String], authoredBy: Int, accredTypeId: Int, status: AccredStatus.Value, preferedVipDesk: Int, mustContactAdmin: Boolean, requireRealNameOnDelivery: Boolean)
 
   case class StaffAccount(staffAccountId: Option[Int], eventId: Int, vipDeskId: Int, name: String, authoredBy: Int, authoredAt: Option[DateTime])
 
-  case class AccredLog(accredLogId: Option[Int], accredLogTime: Option[DateTime], accredId: Int, authoredByAdmin: Int, authoredByStaff: Int, sourceState: AccredStatus.Value, targetState: AccredStatus.Value, remarks: Option[String])
+  case class AccredLog(accredLogId: Option[Int], accredLogTime: Option[DateTime], accredId: Int, authoredByAdmin: Int, authoredByStaff: Int, sourceState: AccredStatus.Value, targetState: AccredStatus.Value, remarks: Option[String], accredNumber: Option[String])
 
   object returnTypes {
     case class FullAccredType(accredType: AccredType, physicalAccredType: Option[PhysicalAccredType])

@@ -29,7 +29,7 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
     }
   }.requiresAuthentication
 
-  case class SetState(targetState: AccredStatus.Value, remarks: Option[String])
+  case class SetState(targetState: AccredStatus.Value, remarks: Option[String], firstName: Option[String], lastName: Option[String], number: Option[String])
 
   implicit val SetStateFormat: Format[SetState] = Json.format[SetState]
 
@@ -43,7 +43,24 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
         case StaffUser(staffUserId) => (Some(staffUserId), None)
       }
 
-      model.updateAccredStatus(id, target, staff, admin, rq.body.remarks.getOrElse("")).map(res => Ok(Json.toJson(res)))
+      // First, get the accred
+      model.getFullAccred(id).flatMap {
+        case Some((accred, tpe)) =>
+          val nameRequired = accred.requireRealNameOnDelivery && target == AccredStatus.Delivered && (accred.firstname.isEmpty || accred.lastname.isEmpty)
+
+          if (nameRequired && (rq.body.firstName.isEmpty || rq.body.lastName.isEmpty))
+            Future(BadRequest)
+          else if (tpe.physicalAccredType.get.physicalAccredTypeNumbered && rq.body.number.isEmpty)
+            Future(BadRequest)
+          else {
+            model.updateAccredStatus(id, target, staff, admin, rq.body.remarks.getOrElse(""),
+              rq.body.firstName.filter(_ => nameRequired),
+              rq.body.lastName.filter(_ => nameRequired),
+              rq.body.number.filter(_ => tpe.physicalAccredType.get.physicalAccredTypeNumbered),
+            ).map(res => Ok(Json.toJson(res)))
+          }
+        case None => Future(NotFound)
+      }
     }
   }.requiresAuthentication
 
