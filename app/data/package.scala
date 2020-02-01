@@ -2,7 +2,7 @@ import java.sql.PreparedStatement
 
 import anorm.Macro.ColumnNaming
 import anorm.{Column, Macro, RowParser, ToParameterList, ToStatement, ~}
-import data.returnTypes.FullAccredType
+import data.returnTypes.{FullAccredLog, FullAccredType, FullStaffAccount}
 import org.joda.time.DateTime
 import play.api.libs.json._
 import anorm.JodaParameterMetaData._ // VERY IMPORTANT IMPLICIT!
@@ -43,12 +43,16 @@ package object data {
 
   case class StaffAccount(staffAccountId: Option[Int], eventId: Int, vipDeskId: Int, name: String, authoredBy: Int, authoredAt: Option[DateTime])
 
-  case class AccredLog(accredLogId: Option[Int], accredLogTime: Option[DateTime], accredId: Int, authoredByAdmin: Int, authoredByStaff: Int, sourceState: AccredStatus.Value, targetState: AccredStatus.Value, remarks: Option[String], accredNumber: Option[String])
+  case class AccredLog(accredLogId: Option[Int], accredLogTime: Option[DateTime], accredId: Int, authoredByAdmin: Option[Int], authoredByStaff: Option[Int], sourceState: AccredStatus.Value, targetState: AccredStatus.Value, remarks: Option[String], accredNumber: Option[String])
 
   object returnTypes {
     case class FullAccredType(accredType: AccredType, physicalAccredType: Option[PhysicalAccredType])
 
     case class FullAccred(accred: Accred, accredType: FullAccredType, preferedVipDesk: VipDesk)
+
+    case class FullStaffAccount(account: StaffAccount, vipDesk: VipDesk)
+
+    case class FullAccredLog(log: AccredLog, staff: Option[FullStaffAccount])
   }
 
   implicit val datetimeRead: Reads[DateTime] = JodaReads.DefaultJodaDateTimeReads
@@ -88,4 +92,7 @@ package object data {
 
   implicit val FullAccredTypeRowParser: RowParser[FullAccredType] = (AccredTypeRowParser ~ PhysicalAccredTypeRowParser.?) map { case tpe ~ ptpe => FullAccredType(tpe, ptpe) }
   implicit val FullAccredTypeFormat: OFormat[FullAccredType] = Json.format[FullAccredType]
+
+  implicit val FullStaffAccountFormat: OFormat[FullStaffAccount] = Json.format[FullStaffAccount]
+  implicit val FullAccredLogFormat: OFormat[FullAccredLog] = Json.format[FullAccredLog]
 }

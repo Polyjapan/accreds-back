@@ -15,6 +15,7 @@ PUT           /accreds/:id                controllers.AccredsController.updateAc
 +nocsrf
 DELETE        /accreds/:id                controllers.AccredsController.deleteAccred(id: Int)
 GET           /accreds/:id                controllers.AccredsController.getAccred(id: Int)
+GET           /accreds/:id/logs           controllers.AccredsController.getLogs(id: Int)
 +nocsrf
 PUT           /accreds/:id/state          controllers.AccredsController.setState(id: Int)
 

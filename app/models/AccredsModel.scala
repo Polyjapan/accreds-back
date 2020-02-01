@@ -3,7 +3,7 @@ package models
 import anorm.SqlParser._
 import anorm._
 import data._
-import data.returnTypes.{FullAccred, FullAccredType}
+import data.returnTypes.{FullAccred, FullAccredLog, FullAccredType, FullStaffAccount}
 import javax.inject.{Inject, Singleton}
 import utils.SqlUtils
 
@@ -42,9 +42,9 @@ class AccredsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(impl
   })
 
   def getAuthors: Future[Set[Int]] = Future(db.withConnection { implicit conn =>
-    SQL("SELECT authored_by FROM accreds WHERE deleted = 0 AND event_id = {id}")
+    SQL("SELECT authored_by FROM accreds WHERE deleted = 0 AND event_id = {id} UNION SELECT authored_by_admin AS authored_by FROM accred_logs WHERE authored_by_admin IS NOT NULL")
       .on("id" -> eventId)
-      .as(int("authored_by").*)
+      .as(int(1).*)
       .toSet
   })
 
@@ -78,6 +78,17 @@ class AccredsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(impl
     SQL("UPDATE accreds SET deleted = 1 WHERE accred_id = {accredId}")
       .on("accredId" -> id)
       .executeUpdate()
+  })
+
+  def getLogs(id: Int): Future[List[FullAccredLog]] = Future(db.withConnection { implicit conn =>
+    SQL("SELECT * FROM accred_logs LEFT JOIN staff_accounts on accred_logs.authored_by_staff = staff_accounts.staff_account_id LEFT JOIN vip_desks on staff_accounts.vip_desk_id = vip_desks.vip_desk_id WHERE accred_id = {id} ORDER BY accred_log_time DESC")
+      .on("id" -> id)
+      .as((AccredLogRowParser ~ StaffAccountRowParser.? ~ VipDeskRowParser.?).map {
+        case log ~ Some(staff) ~ Some(desk) => FullAccredLog(log, Some(FullStaffAccount(staff, desk)))
+        case log ~ r1 ~ r2 =>
+          println(r1 + " - " + r2)
+          FullAccredLog(log, None)
+      }.*)
   })
 
 }

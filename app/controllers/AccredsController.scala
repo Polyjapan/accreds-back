@@ -105,4 +105,8 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
     model.deleteAccred(id).map(res => Ok(Json.toJson(res > 0)))
   }.requiresAdmin
 
+  def getLogs(id: Int) = Action.async { implicit rq =>
+    model.getLogs(id).map(res => Ok(Json.toJson(res)))
+  }.requiresAdmin
+
 }
