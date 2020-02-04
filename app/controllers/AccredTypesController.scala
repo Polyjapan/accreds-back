@@ -38,6 +38,10 @@ class AccredTypesController @Inject()(cc: ControllerComponents, auth: AuthApi, m
     model.createPhysicalAccredType(rq.body).map(res => Ok(Json.toJson(res)))
   }.requiresGroup("securite")
 
+  def createUpdateAccredTypeMapping: Action[List[(Int, Int)]] = Action.async(parse.json[List[(Int, Int)]]) { implicit rq =>
+    model.createUpdateAccredTypeMapping(rq.body).map(_ => Ok)
+  }.requiresGroup("securite")
+
   // Mapping to create as well
 
 }

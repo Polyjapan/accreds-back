@@ -22,6 +22,8 @@ PUT           /accreds/:id/state          controllers.AccredsController.setState
 GET           /accredTypes                controllers.AccredTypesController.getAccredTypes
 +nocsrf
 POST          /accredTypes                controllers.AccredTypesController.createAccredType
++nocsrf
+POST          /accredTypes/mapping        controllers.AccredTypesController.createUpdateAccredTypeMapping
 GET           /physicalAccredTypes        controllers.AccredTypesController.getPhysicalAccredTypes
 +nocsrf
 POST          /physicalAccredTypes        controllers.AccredTypesController.createPhysicalAccredType
