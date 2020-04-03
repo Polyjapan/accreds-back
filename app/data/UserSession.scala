@@ -1,6 +1,6 @@
 package data
 
-import ch.japanimpact.auth.api.AppTicketResponse
+import ch.japanimpact.auth.api.cas.CASServiceResponse
 import play.api.libs.json._
 
 sealed trait UserSession
@@ -8,8 +8,8 @@ sealed trait UserSession
 case class AdminUser(userId: Int, groups: Set[String], firstName: String) extends UserSession
 
 object AdminUser {
-  def apply(rep: AppTicketResponse): AdminUser =
-    AdminUser(rep.userId, rep.groups, rep.user.details.firstName)
+  def apply(rep: CASServiceResponse): AdminUser =
+    AdminUser(rep.user.toInt, rep.groups, rep.firstname.get)
 }
 
 case class StaffUser(staffUserId: Int) extends UserSession

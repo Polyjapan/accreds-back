@@ -2,7 +2,7 @@ package controllers
 
 import java.time.Clock
 
-import ch.japanimpact.auth.api.AuthApi
+import ch.japanimpact.auth.api.cas.CASService
 import data.{AdminUser, StaffUser, UserSession}
 import javax.inject.Inject
 import models.AccountsModel
@@ -17,21 +17,17 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class LoginController @Inject()(cc: ControllerComponents, auth: AuthApi, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class LoginController @Inject()(cc: ControllerComponents, cas: CASService, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def login(ticket: String): Action[AnyContent] = Action.async { implicit rq =>
-    if (auth.isValidTicket(ticket)) {
-      auth.getAppTicket(ticket).map {
-        case Left(ticketResponse) if ticketResponse.ticketType.isValidLogin =>
-          if (!ticketResponse.groups("comite-ji")) Forbidden
-          else {
-            val session: JwtSession = JwtSession() + ("user", AdminUser(ticketResponse).asInstanceOf[UserSession])
+    cas.proxyValidate(ticket, None) map {
+      case Left(err) =>
+        BadRequest(Json.obj("error" -> err.errorType.toString, "message" -> err.message))
+      case Right(data) =>
+        val session: JwtSession = JwtSession() + ("user", AdminUser(data).asInstanceOf[UserSession])
 
-            Ok(Json.toJson(Json.obj("session" -> session.serialize)))
-          }
-        case Right(_) => BadRequest
-      }
-    } else Future(BadRequest)
+        Ok(Json.toJson(Json.obj("session" -> session.serialize)))
+    }
   }
 
   case class GrantStaffRequest(vipDeskId: Int, name: String)
