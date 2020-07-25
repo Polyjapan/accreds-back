@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredsModel, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAccreds: Action[AnyContent] = Action.async { implicit rq =>
-    model.getAccreds.map(res => Ok(Json.toJson(res)))
+    model.getAccreds(rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAuthentication
 
   def getAccred(id: Int): Action[AnyContent] = Action.async { implicit rq =>
@@ -68,7 +68,7 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
     val userId = rq.user.asInstanceOf[AdminUser].userId
     val toCreate = rq.body.copy(None, authoredBy = userId, status = AccredStatus.Granted)
 
-    model.createAccred(toCreate).map(res => Ok(Json.toJson(res)))
+    model.createAccred(toCreate, rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAdmin
 
   case class DelegatedAccredCreation(accred: Accred, delegationKey: String)
@@ -84,7 +84,7 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
       accounts.getOneTimeKey(key).flatMap {
         case Some(userId) =>
           val toCreate = rq.body.accred.copy(None, authoredBy = userId, status = AccredStatus.Granted, details = Some(rq.body.accred.details.getOrElse("") + " - Créé par délégation au compte staff " + rq.user.asInstanceOf[StaffUser].staffUserId))
-          model.createAccred(toCreate).map(res => Ok(Json.toJson(res)))
+          model.createAccred(toCreate, rq.eventId).map(res => Ok(Json.toJson(res)))
 
         case None => Future(Forbidden)
       }
@@ -94,7 +94,7 @@ class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model
   def createAccreds: Action[List[Accred]] = Action.async(parse.json[List[Accred]]) { implicit rq =>
     val userId = rq.user.asInstanceOf[AdminUser].userId
 
-    model.createAccreds(userId, rq.body).map(res => Ok(Json.toJson(res)))
+    model.createAccreds(userId, rq.body, rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAdmin
 
   def updateAccred(id: Int): Action[Accred] = Action.async(parse.json[Accred]) { implicit rq =>

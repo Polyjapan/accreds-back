@@ -11,22 +11,22 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(implicit ec: ExecutionContext) {
   private val db = dbApi database "default"
-  private def eventId = events.getCurrentEventIdSync
+  private def currentEventId = events.getCurrentEventIdSync
 
   def getAccredTypes(): Future[List[AccredType]] = Future(db.withConnection { implicit conn =>
     SQL("SELECT * FROM accred_types").as(AccredTypeRowParser.*)
   })
 
-  def getPhysicalAccredTypes(): Future[List[PhysicalAccredType]] = Future(db.withConnection { implicit conn =>
-    SQL("SELECT * FROM physical_accred_types WHERE event_id = {event_id}").on("event_id" -> eventId).as(PhysicalAccredTypeRowParser.*)
+  def getPhysicalAccredTypes(event: Option[Int] = None): Future[List[PhysicalAccredType]] = Future(db.withConnection { implicit conn =>
+    SQL("SELECT * FROM physical_accred_types WHERE event_id = {event_id}").on("event_id" -> event.getOrElse(currentEventId)).as(PhysicalAccredTypeRowParser.*)
   })
 
   def createAccredType(tpe: AccredType): Future[Int] = Future(db.withConnection { implicit conn =>
     SqlUtils.insertOne("accred_types", tpe)
   })
 
-  def createPhysicalAccredType(tpe: PhysicalAccredType): Future[Int] = Future(db.withConnection { implicit conn =>
-    SqlUtils.insertOne("physical_accred_types", tpe.copy(eventId = tpe.eventId.orElse(Some(this.eventId))))
+  def createPhysicalAccredType(tpe: PhysicalAccredType, event: Option[Int] = None): Future[Int] = Future(db.withConnection { implicit conn =>
+    SqlUtils.insertOne("physical_accred_types", tpe.copy(eventId = event.orElse(Some(this.currentEventId))))
   })
 
   def createUpdateAccredTypeMapping(mappings: List[(Int, Int)]): Future[Int] = Future(db.withConnection { implicit conn =>
@@ -36,9 +36,9 @@ class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(
       .execute().sum
   })
 
-  def getFullAccredTypes(): Future[List[FullAccredType]] = Future(db.withConnection { implicit conn =>
+  def getFullAccredTypes(event: Option[Int] = None): Future[List[FullAccredType]] = Future(db.withConnection { implicit conn =>
     SQL("SELECT accred_types.*, physical_accred_types.* FROM accred_types LEFT JOIN accred_type_mappings atm on accred_types.accred_type_id = atm.accred_type_id LEFT JOIN physical_accred_types on atm.physical_accred_type_id = physical_accred_types.physical_accred_type_id AND physical_accred_types.event_id = {eventId}")
-      .on("eventId" -> eventId)
+      .on("eventId" -> event.getOrElse(currentEventId))
       .as(FullAccredTypeRowParser.*)
   })
 

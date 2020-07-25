@@ -41,3 +41,5 @@ POST          /staffMode                  controllers.LoginController.grantStaff
 GET           /people/admins              controllers.PeopleController.getAdmins
 
 GET           /event                      controllers.EventController.getEvent
+GET           /events                     controllers.EventController.getEvents
+GET           /switchEvent/:id            controllers.EventController.switchEvent(id: Int)

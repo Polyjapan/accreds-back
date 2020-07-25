@@ -35,7 +35,7 @@ class LoginController @Inject()(cc: ControllerComponents, cas: CASService, accou
   implicit val requestParser: Format[GrantStaffRequest] = Json.format[GrantStaffRequest]
 
   def grantStaff: Action[GrantStaffRequest] = Action.async(parse.json[GrantStaffRequest]) { implicit rq =>
-    accounts.createStaffAccount(rq.body.vipDeskId, rq.body.name, rq.user.asInstanceOf[AdminUser].userId)
+    accounts.createStaffAccount(rq.body.vipDeskId, rq.body.name, rq.user.asInstanceOf[AdminUser].userId, rq.eventId)
       .map {
         case Some(accountId) =>
           val session: JwtSession = JwtSession() + ("user", StaffUser(accountId).asInstanceOf[UserSession])

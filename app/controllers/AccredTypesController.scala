@@ -23,11 +23,11 @@ class AccredTypesController @Inject()(cc: ControllerComponents, auth: AuthApi, m
   }.requiresAuthentication
 
   def getPhysicalAccredTypes: Action[AnyContent] = Action.async { implicit rq =>
-    model.getPhysicalAccredTypes().map(res => Ok(Json.toJson(res)))
+    model.getPhysicalAccredTypes(rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAuthentication
 
   def getFullAccredTypes: Action[AnyContent] = Action.async { implicit rq =>
-    model.getFullAccredTypes().map(res => Ok(Json.toJson(res)))
+    model.getFullAccredTypes(rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAuthentication
 
   def createAccredType: Action[AccredType] = Action.async(parse.json[AccredType]) { implicit rq =>
@@ -35,7 +35,7 @@ class AccredTypesController @Inject()(cc: ControllerComponents, auth: AuthApi, m
   }.requiresAdmin
 
   def createPhysicalAccredType: Action[PhysicalAccredType] = Action.async(parse.json[PhysicalAccredType]) { implicit rq =>
-    model.createPhysicalAccredType(rq.body).map(res => Ok(Json.toJson(res)))
+    model.createPhysicalAccredType(rq.body, rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresGroup("securite")
 
   def createUpdateAccredTypeMapping: Action[List[(Int, Int)]] = Action.async(parse.json[List[(Int, Int)]]) { implicit rq =>

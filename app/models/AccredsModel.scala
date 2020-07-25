@@ -14,11 +14,11 @@ class AccredsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(impl
 
   private val db = dbApi database "default"
 
-  private def eventId = events.getCurrentEventIdSync
+  private def currentEventId = events.getCurrentEventIdSync
 
-  def getAccreds: Future[List[Accred]] = Future(db.withConnection { implicit conn =>
+  def getAccreds(event: Option[Int] = None): Future[List[Accred]] = Future(db.withConnection { implicit conn =>
     SQL("SELECT * FROM accreds WHERE deleted = 0 AND event_id = {eventId}")
-      .on("eventId" -> eventId)
+      .on("eventId" -> event.getOrElse(currentEventId))
       .as(AccredRowParser.*)
   })
 
@@ -41,19 +41,19 @@ class AccredsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(impl
       .map { case accred ~ tpe => (accred, tpe) }
   })
 
-  def getAuthors: Future[Set[Int]] = Future(db.withConnection { implicit conn =>
+  def getAuthors(event: Option[Int] = None): Future[Set[Int]] = Future(db.withConnection { implicit conn =>
     SQL("SELECT authored_by FROM accreds WHERE deleted = 0 AND event_id = {id} UNION SELECT authored_by_admin AS authored_by FROM accred_logs WHERE authored_by_admin IS NOT NULL")
-      .on("id" -> eventId)
+      .on("id" -> event.getOrElse(currentEventId))
       .as(int(1).*)
       .toSet
   })
 
-  def createAccred(accred: Accred) = Future(db.withConnection { implicit conn =>
-    SqlUtils.insertOne("accreds", accred.copy(eventId = eventId))
+  def createAccred(accred: Accred, event: Option[Int] = None) = Future(db.withConnection { implicit conn =>
+    SqlUtils.insertOne("accreds", accred.copy(eventId = event.getOrElse(this.currentEventId)))
   })
 
-  def createAccreds(author: Int, accreds: List[Accred]) = Future(db.withConnection { implicit conn =>
-    SqlUtils.insertMultiple("accreds", accreds.map(accred => accred.copy(None, authoredBy = author, status = AccredStatus.Granted, eventId = eventId)))
+  def createAccreds(author: Int, accreds: List[Accred], event: Option[Int] = None) = Future(db.withConnection { implicit conn =>
+    SqlUtils.insertMultiple("accreds", accreds.map(accred => accred.copy(None, authoredBy = author, status = AccredStatus.Granted, eventId = event.getOrElse(this.currentEventId))))
   })
 
   def updateAccred(id: Int, accred: Accred): Future[Int] = Future(db.withConnection { implicit conn =>
@@ -65,8 +65,10 @@ class AccredsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(impl
   })
 
   def updateAccredStatus(id: Int, target: data.AccredStatus.Value, staffId: Option[Int], adminId: Option[Int], remarks: String,
-                         firstName: Option[String], lastName: Option[String], number: Option[String]) = Future(db.withConnection { implicit conn =>
+                         firstName: Option[String], lastName: Option[String], number: Option[String], event: Option[Int] = None) = Future(db.withConnection { implicit conn =>
     val nameUpdate = if (firstName.nonEmpty) "firstname = {firstName}, lastname = {lastName}, " else ""
+
+    val eventId = event.getOrElse(currentEventId)
 
     SQL("INSERT INTO accred_logs(accred_id, authored_by_admin, authored_by_staff, source_state, target_state, remarks, accred_number) (SELECT {accredId}, {admin}, {staff}, status, {targetState}, {remarks}, {accredNumber} FROM accreds WHERE accred_id = {accredId} AND deleted = 0 AND event_id = {eventId}) ")
       .on("accredId" -> id, "eventId" -> eventId, "admin" -> adminId, "staff" -> staffId, "targetState" -> target, "remarks" -> remarks, "accredNumber" -> number)

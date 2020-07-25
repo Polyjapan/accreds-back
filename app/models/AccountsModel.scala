@@ -13,7 +13,7 @@ class AccountsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(imp
 
   private val db = dbApi database "default"
 
-  private def eventId = events.getCurrentEventIdSync
+  private def currentEventId = events.getCurrentEventIdSync
 
   object KeyGenerator {
     private final val random = new SecureRandom()
@@ -23,9 +23,9 @@ class AccountsModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(imp
     }
   }
 
-  def createStaffAccount(desk: Int, name: String, author: Int) = Future(db.withConnection { implicit conn =>
+  def createStaffAccount(desk: Int, name: String, author: Int, event: Option[Int] = None) = Future(db.withConnection { implicit conn =>
     SQL("INSERT INTO staff_accounts(event_id, vip_desk_id, name, authored_by) VALUES ({event}, {desk}, {name}, {author})")
-      .on("event" -> eventId, "desk" -> desk, "name" -> name, "author" -> author)
+      .on("event" -> event.getOrElse(currentEventId), "desk" -> desk, "name" -> name, "author" -> author)
       .executeInsert(scalar[Int].singleOpt)
   })
 

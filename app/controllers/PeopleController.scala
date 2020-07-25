@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext
 class PeopleController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAdmins: Action[AnyContent] = Action.async { implicit rq =>
-    model.getAuthors.flatMap(ids => auth.getUserProfiles(ids).map {
+    model.getAuthors(rq.eventId).flatMap(ids => auth.getUserProfiles(ids).map {
       case Left(map) => Ok(Json.toJson(map.values.map(v => v.copy(address = None))))
       case _ => InternalServerError
     })
