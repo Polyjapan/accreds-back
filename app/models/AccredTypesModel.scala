@@ -1,6 +1,5 @@
 package models
 
-import anorm.SqlParser._
 import anorm._
 import data._
 import data.returnTypes.FullAccredType
@@ -27,20 +26,18 @@ class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(
   })
 
   def createPhysicalAccredType(tpe: PhysicalAccredType): Future[Int] = Future(db.withConnection { implicit conn =>
-    SqlUtils.insertOne("physical_accred_types", tpe)
+    SqlUtils.insertOne("physical_accred_types", tpe.copy(eventId = tpe.eventId.orElse(Some(this.eventId))))
   })
 
   def createUpdateAccredTypeMapping(mappings: List[(Int, Int)]): Future[Int] = Future(db.withConnection { implicit conn =>
-    val eventId = this.eventId
-    val params = mappings.map(pair => Seq[NamedParameter]("event" -> eventId, "typeId" -> pair._1, "physTypeId" -> pair._2))
+    val params = mappings.map(pair => Seq[NamedParameter]("typeId" -> pair._1, "physTypeId" -> pair._2))
 
-    BatchSql("INSERT INTO accred_type_mappings(event_id, accred_type_id, physical_accred_type_id) VALUES ({event}, {typeId}, {physTypeId}) ON DUPLICATE KEY UPDATE physical_accred_type_id = {physTypeId}", params.head, params.tail:_*)
+    BatchSql("INSERT INTO accred_type_mappings(accred_type_id, physical_accred_type_id) VALUES ({typeId}, {physTypeId}) ON DUPLICATE KEY UPDATE physical_accred_type_id = {physTypeId}", params.head, params.tail:_*)
       .execute().sum
   })
 
   def getFullAccredTypes(): Future[List[FullAccredType]] = Future(db.withConnection { implicit conn =>
-
-    SQL("SELECT accred_types.*, physical_accred_types.* FROM accred_types LEFT JOIN accred_type_mappings atm on accred_types.accred_type_id = atm.accred_type_id AND atm.event_id = {eventId} LEFT JOIN physical_accred_types on atm.physical_accred_type_id = physical_accred_types.physical_accred_type_id")
+    SQL("SELECT accred_types.*, physical_accred_types.* FROM accred_types LEFT JOIN accred_type_mappings atm on accred_types.accred_type_id = atm.accred_type_id LEFT JOIN physical_accred_types on atm.physical_accred_type_id = physical_accred_types.physical_accred_type_id AND physical_accred_types.event_id = {eventId}")
       .on("eventId" -> eventId)
       .as(FullAccredTypeRowParser.*)
   })

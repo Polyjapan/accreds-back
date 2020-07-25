@@ -12,7 +12,7 @@ package object data {
 
   case class VipDesk(vipDeskId: Option[Int], vipDeskName: String)
 
-  case class PhysicalAccredType(physicalAccredTypeId: Option[Int], physicalAccredTypeName: String, physicalAccredTypeNumbered: Boolean)
+  case class PhysicalAccredType(physicalAccredTypeId: Option[Int], physicalAccredTypeName: String, physicalAccredTypeNumbered: Boolean, eventId: Option[Int])
 
   case class AccredType(accredTypeId: Option[Int], accredTypeName: String, requiresSignature: Boolean, isTemporary: Boolean)
 
