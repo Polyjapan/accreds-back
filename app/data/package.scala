@@ -8,8 +8,6 @@ import play.api.libs.json._
 import anorm.JodaParameterMetaData._ // VERY IMPORTANT IMPLICIT!
 
 package object data {
-  case class Event(eventId: Option[Int], eventName: String)
-
   case class VipDesk(vipDeskId: Option[Int], vipDeskName: String)
 
   case class PhysicalAccredType(physicalAccredTypeId: Option[Int], physicalAccredTypeName: String, physicalAccredTypeNumbered: Boolean, eventId: Option[Int])
@@ -57,10 +55,6 @@ package object data {
 
   implicit val datetimeRead: Reads[DateTime] = JodaReads.DefaultJodaDateTimeReads
   implicit val datetimeWrite: Writes[DateTime] = JodaWrites.JodaDateTimeWrites
-
-  implicit val EventFormat: OFormat[Event] = Json.format[Event]
-  implicit val EventParameterList: ToParameterList[Event] = Macro.toParameters[Event]()
-  implicit val EventRowParser: RowParser[Event] = Macro.namedParser[Event]((p: String) => "events." + ColumnNaming.SnakeCase(p))
 
   implicit val VipDeskFormat: OFormat[VipDesk] = Json.format[VipDesk]
   implicit val VipDeskParameterList: ToParameterList[VipDesk] = Macro.toParameters[VipDesk]()

@@ -18,7 +18,7 @@ class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(
   })
 
   def getPhysicalAccredTypes(): Future[List[PhysicalAccredType]] = Future(db.withConnection { implicit conn =>
-    SQL("SELECT * FROM physical_accred_types").as(PhysicalAccredTypeRowParser.*)
+    SQL("SELECT * FROM physical_accred_types WHERE event_id = {event_id}").on("event_id" -> eventId).as(PhysicalAccredTypeRowParser.*)
   })
 
   def createAccredType(tpe: AccredType): Future[Int] = Future(db.withConnection { implicit conn =>
