@@ -37,8 +37,8 @@ class LoginController @Inject()(cc: ControllerComponents, cas: CASService, accou
   def grantStaff: Action[GrantStaffRequest] = Action.async(parse.json[GrantStaffRequest]) { implicit rq =>
     accounts.createStaffAccount(rq.body.vipDeskId, rq.body.name, rq.user.asInstanceOf[AdminUser].userId, rq.eventId)
       .map {
-        case Some(accountId) =>
-          val session: JwtSession = JwtSession() + ("user", StaffUser(accountId).asInstanceOf[UserSession])
+        case Some((accountId, eventId)) =>
+          val session: JwtSession = JwtSession() + ("user", StaffUser(accountId).asInstanceOf[UserSession]) + ("event", eventId)
 
           Ok(Json.toJson(Json.obj("session" -> session.serialize)))
         case None => InternalServerError
