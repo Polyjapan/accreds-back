@@ -13,16 +13,20 @@ class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(
   private val db = dbApi database "default"
   private def currentEventId = events.getCurrentEventIdSync
 
-  def getAccredTypes(): Future[List[AccredType]] = Future(db.withConnection { implicit conn =>
-    SQL("SELECT * FROM accred_types").as(AccredTypeRowParser.*)
+  def getAccredTypes(event: Option[Int] = None): Future[List[AccredType]] = Future(db.withConnection { implicit conn =>
+    SQL("SELECT * FROM accred_types WHERE event_id = {event_id}")
+      .on("event_id" -> event.getOrElse(currentEventId))
+      .as(AccredTypeRowParser.*)
   })
 
   def getPhysicalAccredTypes(event: Option[Int] = None): Future[List[PhysicalAccredType]] = Future(db.withConnection { implicit conn =>
-    SQL("SELECT * FROM physical_accred_types WHERE event_id = {event_id}").on("event_id" -> event.getOrElse(currentEventId)).as(PhysicalAccredTypeRowParser.*)
+    SQL("SELECT * FROM physical_accred_types WHERE event_id = {event_id}")
+      .on("event_id" -> event.getOrElse(currentEventId))
+      .as(PhysicalAccredTypeRowParser.*)
   })
 
-  def createAccredType(tpe: AccredType): Future[Int] = Future(db.withConnection { implicit conn =>
-    SqlUtils.insertOne("accred_types", tpe)
+  def createAccredType(tpe: AccredType, event: Option[Int] = None): Future[Int] = Future(db.withConnection { implicit conn =>
+    SqlUtils.insertOne("accred_types", tpe.copy(eventId = event.orElse(Some(this.currentEventId))))
   })
 
   def createPhysicalAccredType(tpe: PhysicalAccredType, event: Option[Int] = None): Future[Int] = Future(db.withConnection { implicit conn =>
@@ -37,7 +41,7 @@ class AccredTypesModel @Inject()(dbApi: play.api.db.DBApi, events: EventsModel)(
   })
 
   def getFullAccredTypes(event: Option[Int] = None): Future[List[FullAccredType]] = Future(db.withConnection { implicit conn =>
-    SQL("SELECT accred_types.*, physical_accred_types.* FROM accred_types LEFT JOIN accred_type_mappings atm on accred_types.accred_type_id = atm.accred_type_id LEFT JOIN physical_accred_types on atm.physical_accred_type_id = physical_accred_types.physical_accred_type_id AND physical_accred_types.event_id = {eventId}")
+    SQL("SELECT accred_types.*, physical_accred_types.* FROM accred_types LEFT JOIN accred_type_mappings atm on accred_types.accred_type_id = atm.accred_type_id LEFT JOIN physical_accred_types on atm.physical_accred_type_id = physical_accred_types.physical_accred_type_id AND physical_accred_types.event_id = accred_types.event_id WHERE accred_types.event_id = {eventId}")
       .on("eventId" -> event.getOrElse(currentEventId))
       .as(FullAccredTypeRowParser.*)
   })

@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 class AccredTypesController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredTypesModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAccredTypes: Action[AnyContent] = Action.async { implicit rq =>
-    model.getAccredTypes().map(res => Ok(Json.toJson(res)))
+    model.getAccredTypes(rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAuthentication
 
   def getPhysicalAccredTypes: Action[AnyContent] = Action.async { implicit rq =>
@@ -31,7 +31,7 @@ class AccredTypesController @Inject()(cc: ControllerComponents, auth: AuthApi, m
   }.requiresAuthentication
 
   def createAccredType: Action[AccredType] = Action.async(parse.json[AccredType]) { implicit rq =>
-    model.createAccredType(rq.body).map(res => Ok(Json.toJson(res)))
+    model.createAccredType(rq.body, rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAdmin
 
   def createPhysicalAccredType: Action[PhysicalAccredType] = Action.async(parse.json[PhysicalAccredType]) { implicit rq =>

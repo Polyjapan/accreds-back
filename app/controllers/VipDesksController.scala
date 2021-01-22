@@ -19,11 +19,11 @@ import scala.concurrent.ExecutionContext
 class VipDesksController @Inject()(cc: ControllerComponents, auth: AuthApi, model: VipDesksModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getDesks: Action[AnyContent] = Action.async { implicit rq =>
-    model.getVipDesks.map(res => Ok(Json.toJson(res)))
+    model.getVipDesks(rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAuthentication
 
   def createDesk: Action[VipDesk] = Action.async(parse.json[VipDesk]) { implicit rq =>
-    model.createVipDesk(rq.body).map(res => Ok(Json.toJson(res)))
+    model.createVipDesk(rq.body, rq.eventId).map(res => Ok(Json.toJson(res)))
   }.requiresAdmin
 
 }

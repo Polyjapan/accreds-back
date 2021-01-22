@@ -1,18 +1,57 @@
-import java.sql.PreparedStatement
-
+import anorm.JodaParameterMetaData._
 import anorm.Macro.ColumnNaming
 import anorm.{Column, Macro, RowParser, ToParameterList, ToStatement, ~}
 import data.returnTypes.{FullAccredLog, FullAccredType, FullStaffAccount}
 import org.joda.time.DateTime
 import play.api.libs.json._
-import anorm.JodaParameterMetaData._ // VERY IMPORTANT IMPLICIT!
+
+import java.sql.PreparedStatement
 
 package object data {
-  case class VipDesk(vipDeskId: Option[Int], vipDeskName: String)
 
+  /**
+   * Defines a VIP Desk, i.e. a place where guests can be identified an get their physical accreditation
+   *
+   * @param vipDeskId   the ID of the desk, assigned by the database (autoincr). Optional: is not sent by the client when
+   *                    creating a desk
+   * @param eventId     the ID of the event, assigned by the controller depending on the access token. Optional: is not
+   *                    sent by the client when creating
+   * @param vipDeskName the name of this desk
+   */
+  case class VipDesk(vipDeskId: Option[Int], eventId: Option[Int], vipDeskName: String)
+
+  /**
+   * Defines a physical accreditation type, i.e. the description of the physical object in the real world that allows
+   * to identify a holder to an accreditation type
+   *
+   * @param physicalAccredTypeId       the ID of the accreditation type, assigned by the database (autoincr). Optional: is not
+   *                                   sent by the client
+   * @param physicalAccredTypeName     the name of this physical accreditation, contains the description of the physical
+   *                                   object (ex: "Badge without personal picture")
+   * @param physicalAccredTypeNumbered if set to true, the physical accreditation has a number on it, which the staff
+   *                                   will have to provide to the system when handing it.
+   * @param eventId                    the ID of the event, assigned by the controller depending on the access token. Optional: is not
+   *                                   sent by the client when creating
+   */
   case class PhysicalAccredType(physicalAccredTypeId: Option[Int], physicalAccredTypeName: String, physicalAccredTypeNumbered: Boolean, eventId: Option[Int])
 
-  case class AccredType(accredTypeId: Option[Int], accredTypeName: String, requiresSignature: Boolean, isTemporary: Boolean)
+  /**
+   * Defines an accreditation type, i.e. a generic descriptiopn of a category of guests at the event (for example:
+   * singer, speaker, ...)
+   *
+   * @param accredTypeId      the ID of the accreditation type, assigned by the database (autoincr). Optional: is not
+   *                          sent by the client
+   * @param eventId           the ID of the event, assigned by the controller depending on the access token. Optional: is not
+   *                          sent by the client when creating
+   * @param accredTypeName    the name of the accreditation, which describes it to the human users of the system
+   * @param requiresSignature if true, a signature will be requested when the accreditation is handed out. For now,
+   *                          a separate signature sheet (on paper) must be given to the staffs for that purpose.
+   *                          TODO: we may implement digital signatures, as in Magmat.
+   * @param isTemporary       if true, the accredited person must give back its physical accreditation when leaving. An
+   *                          accreditation type with this value set to true will be able to go from status
+   *                          [[AccredStatus.Delivered]] to [[AccredStatus.Recovered]].
+   */
+  case class AccredType(accredTypeId: Option[Int], eventId: Option[Int], accredTypeName: String, requiresSignature: Boolean, isTemporary: Boolean)
 
   object AccredStatus extends Enumeration {
     type AccredStatus = Value
@@ -44,6 +83,7 @@ package object data {
   case class AccredLog(accredLogId: Option[Int], accredLogTime: Option[DateTime], accredId: Int, authoredByAdmin: Option[Int], authoredByStaff: Option[Int], sourceState: AccredStatus.Value, targetState: AccredStatus.Value, remarks: Option[String], accredNumber: Option[String])
 
   object returnTypes {
+
     case class FullAccredType(accredType: AccredType, physicalAccredType: Option[PhysicalAccredType])
 
     case class FullAccred(accred: Accred, accredType: FullAccredType, preferedVipDesk: VipDesk)
@@ -51,6 +91,7 @@ package object data {
     case class FullStaffAccount(account: StaffAccount, vipDesk: VipDesk)
 
     case class FullAccredLog(log: AccredLog, staff: Option[FullStaffAccount])
+
   }
 
   implicit val datetimeRead: Reads[DateTime] = JodaReads.DefaultJodaDateTimeReads
