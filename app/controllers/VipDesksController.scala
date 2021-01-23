@@ -1,22 +1,20 @@
 package controllers
 
-import java.time.Clock
-
-import ch.japanimpact.auth.api.AuthApi
 import data.VipDesk
-import javax.inject.Inject
-import models.{AccredTypesModel, VipDesksModel}
+import models.VipDesksModel
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import utils.AuthenticationPostfix._
 
+import java.time.Clock
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 /**
  * @author Louis Vialar
  */
-class VipDesksController @Inject()(cc: ControllerComponents, auth: AuthApi, model: VipDesksModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class VipDesksController @Inject()(cc: ControllerComponents, model: VipDesksModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getDesks: Action[AnyContent] = Action.async { implicit rq =>
     model.getVipDesks(rq.eventId).map(res => Ok(Json.toJson(res)))

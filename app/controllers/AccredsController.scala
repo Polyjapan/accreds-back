@@ -2,7 +2,6 @@ package controllers
 
 import java.time.Clock
 
-import ch.japanimpact.auth.api.AuthApi
 import data.{Accred, AccredStatus, AdminUser, StaffUser}
 import javax.inject.Inject
 import models.{AccountsModel, AccredsModel}
@@ -16,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class AccredsController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredsModel, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class AccredsController @Inject()(cc: ControllerComponents, model: AccredsModel, accounts: AccountsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAccreds: Action[AnyContent] = Action.async { implicit rq =>
     model.getAccreds(rq.eventId).map(res => Ok(Json.toJson(res)))

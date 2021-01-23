@@ -1,9 +1,10 @@
 package controllers
 
-import java.time.Clock
+import ch.japanimpact.auth.api.cas.CASService
 
-import ch.japanimpact.auth.api.AuthApi
+import java.time.Clock
 import data.{AccredType, PhysicalAccredType}
+
 import javax.inject.Inject
 import models.AccredTypesModel
 import play.api.Configuration
@@ -16,7 +17,7 @@ import scala.concurrent.ExecutionContext
 /**
  * @author Louis Vialar
  */
-class AccredTypesController @Inject()(cc: ControllerComponents, auth: AuthApi, model: AccredTypesModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
+class AccredTypesController @Inject()(cc: ControllerComponents, auth: CASService, model: AccredTypesModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) {
 
   def getAccredTypes: Action[AnyContent] = Action.async { implicit rq =>
     model.getAccredTypes(rq.eventId).map(res => Ok(Json.toJson(res)))

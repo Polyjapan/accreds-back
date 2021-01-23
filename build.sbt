@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
     libraryDependencies += "org.playframework.anorm" %% "anorm" % "2.6.4",
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.8.1",
     libraryDependencies += "com.typesafe.play" %% "play-json-joda" % "2.8.1",
-    libraryDependencies += "ch.japanimpact" %% "jiauthframework" % "1.0-SNAPSHOT",
+    libraryDependencies += "ch.japanimpact" %% "jiauthframework" % "2.0-SNAPSHOT",
     libraryDependencies += "ch.japanimpact" %% "ji-events-api" % "1.0-SNAPSHOT",
     libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.34",
     libraryDependencies += "com.pauldijou" %% "jwt-play" % "4.2.0",
@@ -25,6 +25,7 @@ lazy val root = (project in file("."))
 
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
     resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/",
+    resolvers += "Japan Impact Snapshot Repository" at "https://repository.japan-impact.ch/snapshots/",
     resolvers += Resolver.mavenCentral,
     scalacOptions ++= Seq(
       "-feature",
